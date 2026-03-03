@@ -14,10 +14,10 @@ services:
   api:
     build: .
     ports:
-      - "3000:3000"
+      - "5000:5000"
     environment:
-      DATABASE_URL: "postgresql://user:password@db:5432/compte_shaba?schema=public"
-      JWT_SECRET: "ta_cle_secrete_jwt_pour_production"
+      DATABASE_URL: "postgresql://postgres:shabafai1234@db.pevzjqmtidgxcrnbbidg.supabase.co:5432/postgres"
+      JWT_SECRET: "cle-secret-pour-la-cours-des-compte-de-shabafai"
     depends_on:
       - db
 

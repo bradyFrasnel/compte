@@ -19,5 +19,5 @@ RUN npm run build
 # On vérifie que le port correspond à ton main.ts (5000)
 EXPOSE 5000 
 
-# On lance le fichier compilé
-CMD ["node", "dist/main"]
+# On lance le fichier compilé (chemin correct : dist/src/main.js)
+CMD ["node", "dist/src/main"]
