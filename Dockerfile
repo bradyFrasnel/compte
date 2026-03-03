@@ -1,25 +1,23 @@
-# 1. Image de base (Node.js 20)
 FROM node:20-alpine
 
-# 2. Créer le dossier de travail
 WORKDIR /usr/src/app
 
-# 3. Copier les fichiers de dépendances
+# Installation des dépendances
 COPY package*.json ./
-COPY prisma ./prisma/
-
-# 4. Installer les dépendances
+COPY prisma ./prisma/ 
 RUN npm install
 
-# 5. Copier tout le reste du code
+# Copie du code source
 COPY . .
 
-# 6. Générer le client Prisma et compiler NestJS
+# Génération du client Prisma (indispensable pour le build)
 RUN npx prisma generate
+
+# Création du dossier /dist
 RUN npm run build
 
-# 7. Exposer le port de l'application
-EXPOSE 5000
+# On vérifie que le port correspond à ton main.ts (5000)
+EXPOSE 5000 
 
-# 8. Commande de démarrage
-CMD ["npm", "run", "start:prod"]
+# On lance le fichier compilé
+CMD ["node", "dist/main"]
