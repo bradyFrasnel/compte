@@ -20,4 +20,6 @@ RUN npm run build
 EXPOSE 5000 
 
 # On lance le fichier compilé (chemin correct : dist/src/main.js)
-CMD ["node", "dist/src/main"]
+#CMD ["node", "dist/src/main"]
+# Remplace la dernière ligne par celle-ci :
+CMD npx prisma db push && node dist/main
