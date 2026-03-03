@@ -18,8 +18,8 @@ COPY . .
 RUN npx prisma generate
 RUN npm run build
 
-# 7. Exposer le port de l'application (généralement 3000)
-EXPOSE 3000
+# 7. Exposer le port de l'application
+EXPOSE 5000
 
 # 8. Commande de démarrage
 CMD ["npm", "run", "start:prod"]
