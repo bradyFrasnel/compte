@@ -1,0 +1,25 @@
+services:
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: compte_shaba
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  api:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: "postgresql://user:password@db:5432/compte_shaba?schema=public"
+      JWT_SECRET: "ta_cle_secrete_jwt_pour_production"
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
