@@ -17,8 +17,8 @@ export class TransactionsService {
     });
   }
 
+  // Methode pour créer un retrait
   async createWithdrawal(userId: string, amount: number): Promise<Transaction> {
-    // Check total approved balance
     const balance = await this.getBalance();
     if (balance < amount) {
       throw new BadRequestException('Insufficient approved balance');
@@ -28,12 +28,13 @@ export class TransactionsService {
       data: {
         amount,
         type: TransactionType.RETRAIT,
-        status: TransactionStatus.APPROVED, // Withdrawals by admin are auto-approved
+        status: TransactionStatus.APPROVED, 
         userId,
       },
     });
   }
 
+  // Methode pour vérifier le solde
   async getBalance(): Promise<number> {
     const deposits = await this.prisma.transaction.aggregate({
       where: {
@@ -61,6 +62,7 @@ export class TransactionsService {
     return totalDeposits - totalWithdrawals;
   }
 
+  // Methode pour valider une transaction
   async validateTransaction(id: string, status: TransactionStatus): Promise<Transaction> {
     const transaction = await this.prisma.transaction.findUnique({
       where: { id },
@@ -80,6 +82,7 @@ export class TransactionsService {
     });
   }
 
+  // Methode pour trouver toutes les transactions
   async findAll(): Promise<Transaction[]> {
     return this.prisma.transaction.findMany({
       include: {

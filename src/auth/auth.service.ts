@@ -4,6 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { User, Role } from '@prisma/client';
 
+// Service d'authentification
 @Injectable()
 export class AuthService {
   constructor(
@@ -11,10 +12,11 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async register(email: string, password: string, role: Role = Role.USER) {
+  // Methode pour s'inscrire
+  async register(username: string, email: string, password: string, role: Role = Role.USER) {
     const existingUser = await this.usersService.findOne(email);
     if (existingUser) {
-      throw new ConflictException('Email already exists');
+      throw new ConflictException('Cet email est deja utilisé');
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);

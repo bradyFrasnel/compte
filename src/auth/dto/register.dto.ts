@@ -2,6 +2,10 @@ import { IsEmail, IsNotEmpty, IsString, MinLength, IsEnum, IsOptional } from 'cl
 import { Role } from '@prisma/client';
 
 export class RegisterDto {
+  @IsString()
+  @IsNotEmpty()
+  username: string;
+
   @IsEmail()
   @IsNotEmpty()
   email: string;
