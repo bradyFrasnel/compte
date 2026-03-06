@@ -19,5 +19,5 @@ RUN npm run build
 # On vérifie que le port correspond à ton main.ts (5000)
 EXPOSE 5000 
 
-# On lance l'application avec synchronisation BDD
+# On lance l'application simplement (sans db push pour éviter timeout)
 CMD ["npm", "run", "start:prod"]
