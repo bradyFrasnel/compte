@@ -29,7 +29,8 @@ async function bootstrap() {
       'http://localhost:5173',
       'http://127.0.0.1:5173',
       'http://localhost:3000',
-      'mon_lien_frontend_sur_vercel',
+      'https://compte-frontend.vercel.app',
+      'https://*.vercel.app'
     ],
     methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS', 'PUT'],
     credentials: true,
