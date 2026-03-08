@@ -58,7 +58,7 @@ export class TransactionsController {
   @Patch('admin/validate/:id')
   @Roles(Role.ADMIN)
   async validate(@Param('id') id: string, @Body() validateDto: ValidateTransactionDto) {
-    return this.transactionsService.validateTransaction(id, validateDto.status);
+    return this.transactionsService.adminValidateTransaction(id, validateDto.status);
   }
 
   // Methode pour les retraits

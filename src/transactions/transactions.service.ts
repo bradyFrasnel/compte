@@ -101,6 +101,27 @@ export class TransactionsService {
     });
   }
 
+  // Methode pour valider une transaction (admin pur - sans restrictions)
+  async adminValidateTransaction(id: string, status: TransactionStatus): Promise<Transaction> {
+    const transaction = await this.prisma.transaction.findUnique({
+      where: { id },
+    });
+
+    if (!transaction) {
+      throw new NotFoundException('Transaction not found');
+    }
+
+    // Uniquement les dépôts peuvent être validés/rejetés
+    if (transaction.type !== TransactionType.DEPOT) {
+      throw new BadRequestException('Only deposits can be validated');
+    }
+
+    return this.prisma.transaction.update({
+      where: { id },
+      data: { status },
+    });
+  }
+
   // Methode pour trouver toutes les transactions
   async findAll(): Promise<Transaction[]> {
     return this.prisma.transaction.findMany({

@@ -1,4 +1,4 @@
-import { IsEnum, IsOptional, IsString, IsNumber, Min } from 'class-validator';
+import { IsEnum, IsOptional, IsNumber, Min } from 'class-validator';
 import { TransactionStatus, TransactionType } from '@prisma/client';
 
 export class UpdateTransactionDto {
@@ -14,8 +14,4 @@ export class UpdateTransactionDto {
   @IsNumber()
   @Min(0)
   amount?: number;
-
-  @IsOptional()
-  @IsString()
-  justification?: string;
 }

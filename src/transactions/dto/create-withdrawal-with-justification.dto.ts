@@ -8,6 +8,6 @@ export class CreateWithdrawalWithJustificationDto {
 
   @IsString()
   @IsNotEmpty()
-  @MinLength(10)
+  @MinLength(5)
   justification: string;
 }
