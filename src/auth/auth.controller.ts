@@ -2,7 +2,6 @@ import { Controller, Post, Body, UnauthorizedException, HttpCode, HttpStatus } f
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { LoginUsernameDto } from './dto/login-username.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 

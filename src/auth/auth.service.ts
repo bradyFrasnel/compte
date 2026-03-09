@@ -2,6 +2,7 @@ import { Injectable, ConflictException, UnauthorizedException } from '@nestjs/co
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { EmailService } from '../email/email.service';
 import { User, Role } from '@prisma/client';
 
 // Service d'authentification
@@ -10,6 +11,7 @@ export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
+    private emailService: EmailService,
   ) {}
 
   // Methode pour s'inscrire
@@ -77,14 +79,24 @@ export class AuthService {
   }
 
   // Methode pour demander la réinitialisation de mot de passe
-  async forgotPassword(email: string): Promise<{ message: string; token: string }> {
+  async forgotPassword(email: string): Promise<{ message: string; token?: string }> {
+    const user = await this.usersService.findOne(email);
+    if (!user) {
+      // Pour la sécurité, on ne révèle pas si l'email existe
+      return {
+        message: 'Un email de réinitialisation a été envoyé',
+      };
+    }
+
     const resetToken = await this.usersService.generateResetToken(email);
     
-    // Dans un vrai projet, vous enverriez un email ici
-    // Pour l'instant, nous retournons le token pour le développement
+    // Envoyer l'email avec Brevo
+    await this.emailService.sendResetPasswordEmail(email, resetToken, user.username);
+    
     return {
       message: 'Un email de réinitialisation a été envoyé',
-      token: resetToken, // Retiré en production
+      // Retourner le token uniquement en développement
+      token: process.env.NODE_ENV === 'development' ? resetToken : undefined,
     };
   }
 
