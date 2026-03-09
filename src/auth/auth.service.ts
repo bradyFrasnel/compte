@@ -31,6 +31,7 @@ export class AuthService {
     return result;
   }
 
+  // Methode pour valider l'utilisateur par email
   async validateUser(email: string, pass: string): Promise<any> {
     const user = await this.usersService.findOne(email);
     if (user && (await bcrypt.compare(pass, user.password))) {
@@ -40,6 +41,29 @@ export class AuthService {
     return null;
   }
 
+  // Methode pour valider l'utilisateur par username
+  async validateUserByUsername(username: string, pass: string): Promise<any> {
+    const user = await this.usersService.findByUsername(username);
+    if (user && (await bcrypt.compare(pass, user.password))) {
+      const { password, ...result } = user;
+      return result;
+    }
+    return null;
+  }
+
+  // Methode universelle qui gère email et username
+  async validateUserByIdentifier(identifier: string, pass: string): Promise<any> {
+    // Vérifier si c'est un email
+    const isEmail = identifier.includes('@');
+    
+    if (isEmail) {
+      return this.validateUser(identifier, pass);
+    } else {
+      return this.validateUserByUsername(identifier, pass);
+    }
+  }
+
+  // Methode pour se connecter
   async login(user: any) {
     const payload = { email: user.email, sub: user.id, role: user.role };
     return {
@@ -49,6 +73,26 @@ export class AuthService {
         email: user.email,
         role: user.role,
       },
+    };
+  }
+
+  // Methode pour demander la réinitialisation de mot de passe
+  async forgotPassword(email: string): Promise<{ message: string; token: string }> {
+    const resetToken = await this.usersService.generateResetToken(email);
+    
+    // Dans un vrai projet, vous enverriez un email ici
+    // Pour l'instant, nous retournons le token pour le développement
+    return {
+      message: 'Un email de réinitialisation a été envoyé',
+      token: resetToken, // Retiré en production
+    };
+  }
+
+  // Methode pour réinitialiser le mot de passe
+  async resetPassword(token: string, newPassword: string): Promise<{ message: string }> {
+    await this.usersService.resetPassword(token, newPassword);
+    return {
+      message: 'Mot de passe réinitialisé avec succès',
     };
   }
 }
