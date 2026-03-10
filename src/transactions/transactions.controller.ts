@@ -21,7 +21,7 @@ export class TransactionsController {
     return this.transactionsService.createDeposit(req.user.userId, createDepositDto.amount);
   }
 
-  // Methode pour l'affiche des données
+  // Methode pour l'affichage des données
   @Get('all')
   async findAll() {
     return this.transactionsService.findAll();
