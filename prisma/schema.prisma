@@ -23,6 +23,17 @@ model User {
   resetToken        String?        @db.Text
   resetTokenExpiry  DateTime?
   Transaction       Transaction[]
+  MembersShaba      MembersShaba[]
+}
+
+model MembersShaba {
+  id        String   @id @default(uuid())
+  userId     String   @unique
+  nom        String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  
+  @@map("members_shaba")
 }
 
 model Transaction {
@@ -32,8 +43,12 @@ model Transaction {
   status       TransactionStatus @default(PENDING)
   userId       String
   justification String?     @db.Text
+  categorie    CategorieDepot?
   user         User        @relation(fields: [userId], references: [id])
   createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@map("transactions")
 }
 
 enum Role {
@@ -50,4 +65,9 @@ enum TransactionStatus {
   PENDING
   APPROVED
   REJECTED
+}
+
+enum CategorieDepot {
+  SEMAINE
+  ABONNEMENT
 }

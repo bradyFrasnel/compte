@@ -1,6 +1,7 @@
 import { Controller, Post, Body, Get, Patch, Param, UseGuards, Request, Delete } from '@nestjs/common';
 import { TransactionsService } from './transactions.service';
 import { CreateDepositDto } from './dto/create-deposit.dto';
+import { CreateDepositWithCategoryDto } from './dto/create-deposit-with-category.dto';
 import { CreateWithdrawalDto } from './dto/create-withdrawal.dto';
 import { CreateWithdrawalWithJustificationDto } from './dto/create-withdrawal-with-justification.dto';
 import { ValidateTransactionDto } from './dto/validate-transaction.dto';
@@ -19,6 +20,16 @@ export class TransactionsController {
   @Post('deposit')
   async deposit(@Request() req, @Body() createDepositDto: CreateDepositDto) {
     return this.transactionsService.createDeposit(req.user.userId, createDepositDto.amount);
+  }
+
+  // Methode pour effectuer des depots avec categorie
+  @Post('deposit-with-category')
+  async depositWithCategory(@Request() req, @Body() createDepositWithCategoryDto: CreateDepositWithCategoryDto) {
+    return this.transactionsService.createDepositWithCategory(
+      req.user.userId, 
+      createDepositWithCategoryDto.amount, 
+      createDepositWithCategoryDto.categorie
+    );
   }
 
   // Methode pour l'affichage des données

@@ -1,11 +1,12 @@
 import { Injectable, BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Transaction, TransactionType, TransactionStatus, Role } from '@prisma/client';
+import { Transaction, TransactionType, TransactionStatus, Role, CategorieDepot } from '@prisma/client';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
+import { MembersService } from '../members/members.service';
 
 @Injectable()
 export class TransactionsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private membersService: MembersService) {}
 
   async createDeposit(userId: string, amount: number): Promise<Transaction> {
     return this.prisma.transaction.create({
@@ -137,6 +138,26 @@ export class TransactionsService {
       },
       orderBy: {
         createdAt: 'desc',
+      },
+    });
+  }
+
+  async createDepositWithCategory(userId: string, amount: number, categorie: CategorieDepot): Promise<Transaction> {
+    // Vérifier si la catégorie SEMAINE est autorisée pour cet utilisateur
+    if (categorie === CategorieDepot.SEMAINE) {
+      const isMember = await this.membersService.isMember(userId);
+      if (!isMember) {
+        throw new ForbiddenException('Seuls les membres peuvent faire des dépôts de catégorie SEMAINE');
+      }
+    }
+
+    return this.prisma.transaction.create({
+      data: {
+        amount,
+        type: TransactionType.DEPOT,
+        status: TransactionStatus.PENDING,
+        userId,
+        categorie,
       },
     });
   }
