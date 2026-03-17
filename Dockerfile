@@ -10,6 +10,9 @@ RUN npm ci
 # Copie du code source
 COPY . .
 
+# Définir la variable DATABASE_URL (adapter selon votre hébergeur)
+ENV DATABASE_URL="https://qcugsmhwhaildlnlcifz.supabase.co"
+
 # Génération du client Prisma (indispensable pour le build)
 RUN npx prisma generate
 
