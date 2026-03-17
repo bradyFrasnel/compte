@@ -114,4 +114,19 @@ export class UsersService {
       updatedAt: new Date(),
     };
   }
+
+  // Methode pour lister tous les utilisateurs (réservé aux admins)
+  async getAllUsers() {
+    return this.prisma.user.findMany({
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        role: true,
+      },
+      orderBy: {
+        id: 'desc',
+      },
+    });
+  }
 }

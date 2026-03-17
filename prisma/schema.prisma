@@ -10,45 +10,24 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
 }
 
 model User {
-  id                String        @id @default(uuid())
-  username          String        @unique
-  email             String        @unique
-  password          String
-  role              Role          @default(USER)
-  resetToken        String?        @db.Text
-  resetTokenExpiry  DateTime?
-  Transaction       Transaction[]
-  MembersShaba      MembersShaba[]
-}
-
-model MembersShaba {
-  id        String   @id @default(uuid())
-  userId     String   @unique
-  nom        String
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt  DateTime @default(now())
-  
-  @@map("members_shaba")
+  id        String        @id @default(uuid())
+  email     String        @unique
+  password  String
+  role      Role          @default(USER)
+  Transaction Transaction[]
 }
 
 model Transaction {
-  id           String      @id @default(uuid())
-  amount       Decimal
-  type         TransactionType
-  status       TransactionStatus @default(PENDING)
-  userId       String
-  justification String?     @db.Text
-  categorie    CategorieDepot?
-  user         User        @relation(fields: [userId], references: [id])
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
-
-  @@map("transactions")
+  id        String      @id @default(uuid())
+  amount    Decimal
+  type      TransactionType
+  status    TransactionStatus @default(PENDING)
+  userId    String
+  user      User        @relation(fields: [userId], references: [id])
+  createdAt DateTime    @default(now())
 }
 
 enum Role {
@@ -65,9 +44,4 @@ enum TransactionStatus {
   PENDING
   APPROVED
   REJECTED
-}
-
-enum CategorieDepot {
-  SEMAINE
-  ABONNEMENT
 }

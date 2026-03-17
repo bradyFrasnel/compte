@@ -1,25 +1,15 @@
 services:
   db:
-    image: postgres:15-alpine
+    image: postgres:15
     restart: always
     environment:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: compte_shaba
+      POSTGRES_DB: sharedvault
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-
-  api:
-    build: .
-    ports:
-      - "5000:5000"
-    environment:
-      DATABASE_URL: "postgresql://postgres:shabafai1234@db.pevzjqmtidgxcrnbbidg.supabase.co:5432/postgres"
-      JWT_SECRET: "cle-secret-pour-la-cours-des-compte-de-shabafai"
-    depends_on:
-      - db
 
 volumes:
   postgres_data:
