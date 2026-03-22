@@ -1,5 +1,5 @@
 # 📋 MODIFICATIONS BACKEND - SHAREDVAULT
-## Date: 17 Mars 2026
+## Date: 22 Mars 2026 (Mise à jour téléchargement PDF)
 
 ---
 
@@ -37,15 +37,45 @@ export class LoginDto {
 }
 ```
 
+### 4. **Inscription avec rôle optionnel**
+```typescript
+// register.dto.ts
+export class RegisterDto {
+  @IsString() @IsNotEmpty()
+  username: string;
+
+  @IsEmail() @IsNotEmpty()
+  email: string;
+
+  @IsString() @IsNotEmpty() @MinLength(6)
+  password: string;
+
+  @IsEnum(Role) @IsOptional()
+  role?: Role;  // Optionnel, défaut USER
+}
+```
+
+### 5. **Endpoint inscription**
+```
+POST /auth/register
+{
+  "username": "brady_test",
+  "email": "brady@example.com", 
+  "password": "Password123!",
+  "role": "USER"  // Optionnel
+}
+→ Réponse: { user: {...}, access_token: "jwt" }
+```
+
 ---
 
 ## 🔑 **RÉINITIALISATION MOT DE PASSE**
 
-### 4. **Flux complet de réinitialisation**
+### 6. **Flux complet de réinitialisation**
 - **Étape 1**: Demande par email → Token 6 chiffres
 - **Étape 2**: Validation token + nouveau mot de passe
 
-### 5. **DTOs créés**
+### 7. **DTOs créés**
 ```typescript
 // forgot-password.dto.ts
 export class ForgotPasswordDto {
@@ -61,9 +91,27 @@ export class ResetPasswordDto {
   @IsString() @IsNotEmpty() @MinLength(6)
   newPassword: string;
 }
+
+// validate-transaction.dto.ts
+export class ValidateTransactionDto {
+  @IsEnum(TransactionStatus) @IsNotEmpty()
+  status: TransactionStatus;  // APPROVED | REJECTED
+}
+
+// update-transaction.dto.ts
+export class UpdateTransactionDto {
+  @IsOptional() @IsEnum(TransactionStatus)
+  status?: TransactionStatus;
+
+  @IsOptional() @IsEnum(TransactionType)
+  type?: TransactionType;
+
+  @IsOptional() @IsNumber() @Min(0)
+  amount?: number;
+}
 ```
 
-### 6. **Endpoints ajoutés**
+### 8. **Endpoints ajoutés**
 ```
 POST /auth/forgot-password
 {
@@ -79,7 +127,7 @@ POST /auth/reset-password
 → Réponse: { "message": "Mot de passe réinitialisé avec succès" }
 ```
 
-### 7. **Token numérique 6 chiffres**
+### 9. **Token numérique 6 chiffres**
 - **Génération**: `Math.floor(100000 + Math.random() * 900000)`
 - **Validité**: 1 heure
 - **Format**: Toujours 6 chiffres (100000-999999)
@@ -88,23 +136,35 @@ POST /auth/reset-password
 
 ## 💰 **TRANSACTIONS AMÉLIORÉES**
 
-### 8. **Justification retraits**
+### 10. **Validation des transactions**
+- **Endpoint** : `PATCH /transactions/admin/validate/:id` (ADMIN)
+- **DTO** : `ValidateTransactionDto` avec champ `status`
+- **Statuts** : APPROVED, REJECTED, PENDING
+- **Logique** : Uniquement les dépôts peuvent être validés
+
+### 11. **Mise à jour flexible**
+- **Endpoint** : `PATCH /transactions/admin/update/:id` (ADMIN+USER)
+- **DTO** : `UpdateTransactionDto` - champs optionnels
+- **Modifiable** : `status`, `type`, `amount`
+- **Restrictions** : USER modifie uniquement ses transactions PENDING
+
+### 12. **Justification retraits**
 - **Nouveau DTO**: `CreateWithdrawalWithJustificationDto`
 - **Validation**: Minimum 5 caractères
 - **Endpoint**: `POST /transactions/admin/withdraw-with-justification`
 - **Champ BDD**: `justification String? @db.Text`
 
-### 9. **CRUD Complet**
+### 13. **CRUD Complet**
 - **Suppression**: `DELETE /transactions/admin/delete/:id` (ADMIN)
 - **Mise à jour**: `PATCH /transactions/admin/update/:id` (ADMIN+USER)
 - **Mise à jour perso**: `PATCH /transactions/update/:id` (USER)
 
-### 10. **Restrictions métier**
+### 14. **Restrictions métier**
 - **USER**: Modifie uniquement ses transactions PENDING
 - **ADMIN**: Peut modifier toutes les transactions
 - **Validation**: Uniquement les dépôts peuvent être validés
 
-### 11. **Correction validation admin**
+### 15. **Correction validation admin**
 - **Problème**: 403 sur `/admin/update/` utilisait restrictions USER
 - **Solution**: `adminValidateTransaction()` sans restrictions
 - **Endpoint correct**: `PATCH /transactions/admin/validate/:id`
@@ -113,10 +173,16 @@ POST /auth/reset-password
 
 ## 👤 **UTILISATEURS**
 
-### 12. **Profil utilisateur**
+### 16. **Profil utilisateur**
 - **Endpoint**: `GET /users/data`
 - **DTO**: `UserResponseDto` (id, username, email, role)
 - **Protection**: `JwtAuthGuard` obligatoire
+
+### 17. **Endpoint racine**
+```
+GET /
+→ Message de bienvenue de l'application
+```
 
 ---
 
@@ -124,6 +190,7 @@ POST /auth/reset-password
 
 ### **Authentification**
 ```
+GET /                                // Message de bienvenue (NOUVEAU)
 POST /auth/register                    // Inscription
 POST /auth/login                       // Login unique Email/Username (MODIFIÉ)
 POST /auth/forgot-password              // Demande reset (NOUVEAU)
@@ -574,8 +641,26 @@ POST /transactions/deposit-with-category
 - **Template HTML** : Design professionnel et stylisé
 - **Calculs automatiques** : Totaux, moyennes, statistiques
 - **Export direct** : Téléchargement du fichier PDF
+- **Buffer retourné** : `Promise<Buffer>` pour le téléchargement
 
-### 57. **Structure du rapport hebdomadaire**
+### 57. **Flux de téléchargement technique**
+```typescript
+// Controller - Headers HTTP
+res.set({
+  'Content-Type': 'application/pdf',
+  'Content-Disposition': `attachment; filename="rapport-semaine-${weekNumber}-${year}.pdf"`,
+  'Content-Length': pdfBuffer.length,
+});
+res.end(pdfBuffer);  // Envoi du Buffer PDF
+```
+
+### 58. **Points de vigilance production**
+- **Docker Puppeteer** : Peut nécessiter dépendances additionnelles
+- **Performance** : Génération PDF peut prendre 2-5 secondes
+- **Memory** : Buffer PDF dans mémoire (volumineux pour gros rapports)
+- **Timeout** : Adapter les timeouts pour les gros rapports
+
+### 59. **Structure du rapport hebdomadaire**
 ```html
 📊 Rapport Financier Hebdomadaire
 Semaine 12 - 2026
@@ -604,14 +689,14 @@ Du 15 mars 2026 au 21 mars 2026
 └──────────────┴───────────┴────────────────────┴─────────────────┘
 ```
 
-### 58. **Endpoints de rapports**
+### 60. **Endpoints de rapports**
 ```
 GET /reports/weekly/:weekNumber/:year    # ADMIN - Rapport semaine spécifique
 GET /reports/current-week                # ADMIN - Rapport semaine en cours
 → Télécharge le PDF directement
 ```
 
-### 59. **Workflow complet**
+### 61. **Workflow complet**
 1. **Admin ajoute un membre** : POST /members/add
 2. **Membre fait un dépôt SEMAINE** : POST /transactions/deposit-with-category
 3. **Admin valide le dépôt** : PATCH /transactions/admin/validate/:id
@@ -848,3 +933,62 @@ POST /members/add
 - **✅ Sécurité** : Permissions maintenues
 
 **L'admin peut maintenant gérer les membres beaucoup plus facilement !** 🚀
+
+---
+
+## 🎯 **RÉCAPITULATIF COMPLET POUR LE FRONTEND**
+
+### **75. Toutes les fonctionnalités documentées**
+✅ **Authentification** : Login unifié + inscription + reset password  
+✅ **Gestion utilisateurs** : Profil + liste complète (admin)  
+✅ **Transactions** : CRUD complet + validation + catégories  
+✅ **Membres** : Gestion tableau + restrictions SEMAINE  
+✅ **Rapports** : Export PDF hebdomadaire  
+✅ **Emails** : Brevo intégré pour reset password  
+✅ **Sécurité** : JWT + guards + permissions granulaires  
+
+### **76. Structure des données pour le frontend**
+```typescript
+// User
+interface User {
+  id: string;
+  username: string;
+  email: string;
+  role: 'USER' | 'ADMIN';
+}
+
+// Transaction
+interface Transaction {
+  id: string;
+  amount: number;
+  type: 'DEPOT' | 'RETRAIT';
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  justification?: string;
+  categorie?: 'SEMAINE' | 'ABONNEMENT';
+  createdAt: string;
+  user: User;
+}
+
+// Member
+interface Member {
+  id: string;
+  userId: string;
+  nom: string;
+  createdAt: string;
+  user: User;
+}
+```
+
+### **77. Workflow frontend complet**
+1. **Login** : `POST /auth/login` avec identifier (email/username)
+2. **Profil** : `GET /users/data` pour infos utilisateur
+3. **Transactions** : `GET /transactions/all` pour historique
+4. **Dépôts** : `POST /transactions/deposit-with-category` 
+5. **Membres (admin)** : `GET /users/all` → `POST /members/add`
+6. **Rapports (admin)** : `GET /reports/current-week` (PDF)
+
+### **78. Permissions par rôle**
+- **USER** : Profil + dépôts + ses transactions PENDING
+- **ADMIN** : Tout + validation + gestion membres + rapports
+
+**Le frontend a maintenant toutes les informations pour une implémentation complète !** 🎉

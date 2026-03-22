@@ -8,71 +8,92 @@ export class ReportsService {
   constructor(private prisma: PrismaService) {}
 
   async generateWeeklyReport(weekNumber: number, year: number): Promise<Buffer> {
-    // Calculer les dates de la semaine
-    const startDate = new Date(year, 0, 1 + (weekNumber - 1) * 7);
-    startDate.setDate(startDate.getDate() - startDate.getDay() + 1); // Lundi
+    console.log(`🔍 Génération rapport - Semaine ${weekNumber}, Année ${year}`);
     
-    const endDate = new Date(startDate);
-    endDate.setDate(startDate.getDate() + 6); // Dimanche
+    try {
+      // Calculer les dates de la semaine
+      const startDate = new Date(year, 0, 1 + (weekNumber - 1) * 7);
+      startDate.setDate(startDate.getDate() - startDate.getDay() + 1); // Lundi
+      
+      const endDate = new Date(startDate);
+      endDate.setDate(startDate.getDate() + 6); // Dimanche
 
-    // Récupérer les transactions de la semaine
-    const transactions = await this.prisma.transaction.findMany({
-      where: {
-        type: 'DEPOT',
-        categorie: CategorieDepot.SEMAINE,
-        createdAt: {
-          gte: startDate,
-          lte: endDate,
+      console.log(`📅 Période : ${startDate.toISOString()} → ${endDate.toISOString()}`);
+
+      // Récupérer les transactions de la semaine
+      const transactions = await this.prisma.transaction.findMany({
+        where: {
+          type: 'DEPOT',
+          categorie: CategorieDepot.SEMAINE,
+          createdAt: {
+            gte: startDate,
+            lte: endDate,
+          },
+          status: 'APPROVED',
         },
-        status: 'APPROVED',
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            username: true,
-            email: true,
+        include: {
+          user: {
+            select: {
+              id: true,
+              username: true,
+              email: true,
+            },
           },
         },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
 
-    // Récupérer les membres
-    const members = await this.prisma.membersShaba.findMany({
-      include: {
-        user: {
-          select: {
-            id: true,
-            username: true,
-            email: true,
+      console.log(`💰 Transactions trouvées : ${transactions.length}`);
+
+      // Récupérer les membres
+      const members = await this.prisma.membersShaba.findMany({
+        include: {
+          user: {
+            select: {
+              id: true,
+              username: true,
+              email: true,
+            },
           },
         },
-      },
-    });
+      });
 
-    // Générer le PDF
-    const browser = await puppeteer.launch();
-    const page = await browser.newPage();
+      console.log(`👥 Membres trouvés : ${members.length}`);
 
-    const html = this.generateReportHTML(transactions, members, weekNumber, year, startDate, endDate);
-    
-    await page.setContent(html);
-    const pdfUint8Array = await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      margin: {
-        top: '20mm',
-        right: '20mm',
-        bottom: '20mm',
-        left: '20mm',
-      },
-    });
+      const html = this.generateReportHTML(transactions, members, weekNumber, year, startDate, endDate);
+      
+      console.log(`🌐 HTML généré, démarrage Puppeteer...`);
+      
+      const browser = await puppeteer.launch({
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
+      });
+      const page = await browser.newPage();
+      
+      await page.setContent(html);
+      const pdfUint8Array = await page.pdf({
+        format: 'A4',
+        printBackground: true,
+        margin: {
+          top: '20mm',
+          right: '20mm',
+          bottom: '20mm',
+          left: '20mm',
+        },
+      });
 
-    await browser.close();
-    return Buffer.from(pdfUint8Array);
+      await browser.close();
+      
+      const buffer = Buffer.from(pdfUint8Array);
+      console.log(`📄 PDF généré : ${buffer.length} bytes`);
+      
+      return buffer;
+    } catch (error) {
+      console.error('❌ Erreur génération PDF:', error);
+      throw error;
+    }
   }
 
   private generateReportHTML(
@@ -106,7 +127,7 @@ export class ReportsService {
       <body>
         <div class="header">
           <h1>📊 Rapport Financier Hebdomadaire</h1>
-          <h2>Semaine ${weekNumber} - ${year}</h2>
+          <h2>Semaine ${weekNumber} / ${new Date().getMonth() + 1}</h2>
           <p>Du ${startDate.toLocaleDateString('fr-FR')} au ${endDate.toLocaleDateString('fr-FR')}</p>
         </div>
 
