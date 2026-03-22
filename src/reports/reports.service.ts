@@ -66,32 +66,42 @@ export class ReportsService {
       
       console.log(`🌐 HTML généré, démarrage Puppeteer...`);
       
-      const browser = await puppeteer.launch({
-        headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
-      });
-      const page = await browser.newPage();
-      
-      await page.setContent(html);
-      const pdfUint8Array = await page.pdf({
-        format: 'A4',
-        printBackground: true,
-        margin: {
-          top: '20mm',
-          right: '20mm',
-          bottom: '20mm',
-          left: '20mm',
-        },
-      });
+      try {
+        const browser = await puppeteer.launch({
+          headless: true,
+          args: ['--no-sandbox', '--disable-setuid-sandbox']
+        });
+        const page = await browser.newPage();
+        
+        await page.setContent(html);
+        const pdfUint8Array = await page.pdf({
+          format: 'A4',
+          printBackground: true,
+          margin: {
+            top: '20mm',
+            right: '20mm',
+            bottom: '20mm',
+            left: '20mm',
+          },
+        });
 
-      await browser.close();
-      
-      const buffer = Buffer.from(pdfUint8Array);
-      console.log(`📄 PDF généré : ${buffer.length} bytes`);
-      
-      return buffer;
+        await browser.close();
+        
+        const buffer = Buffer.from(pdfUint8Array);
+        console.log(`📄 PDF généré : ${buffer.length} bytes`);
+        
+        return buffer;
+      } catch (error) {
+        console.error('❌ Erreur génération PDF:', error);
+        
+        // Fallback simple : retourner HTML en texte
+        const htmlBuffer = Buffer.from(html, 'utf-8');
+        console.log('🔄 Fallback HTML retourné');
+        
+        return htmlBuffer;
+      }
     } catch (error) {
-      console.error('❌ Erreur génération PDF:', error);
+      console.error('❌ Erreur génération rapport:', error);
       throw error;
     }
   }

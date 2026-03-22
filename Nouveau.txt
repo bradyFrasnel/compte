@@ -1,5 +1,5 @@
 # 📋 MODIFICATIONS BACKEND - SHAREDVAULT
-## Date: 22 Mars 2026 (Mise à jour téléchargement PDF)
+## Date: 22 Mars 2026 (Correction erreur 500 PDF + Fallback HTML)
 
 ---
 
@@ -694,6 +694,24 @@ Du 15 mars 2026 au 21 mars 2026
 GET /reports/weekly/:weekNumber/:year    # ADMIN - Rapport semaine spécifique
 GET /reports/current-week                # ADMIN - Rapport semaine en cours
 → Télécharge le PDF directement
+```
+
+### 60. **Fallback HTML si Puppeteer échoue**
+- **Problème** : Puppeteer peut échouer en production
+- **Solution** : Retourner HTML en Buffer si PDF échoue
+- **Avantage** : L'utilisateur obtient quand même le rapport
+- **Code** :
+```typescript
+try {
+  // Génération PDF avec Puppeteer
+  const buffer = await generatePDF();
+  return buffer;
+} catch (error) {
+  // Fallback : HTML en Buffer
+  const htmlBuffer = Buffer.from(html, 'utf-8');
+  console.log('🔄 Fallback HTML retourné');
+  return htmlBuffer;
+}
 ```
 
 ### 61. **Workflow complet**
