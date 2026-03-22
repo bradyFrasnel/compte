@@ -19,15 +19,28 @@ export class ReportsController {
     @Res() res: Response
   ) {
     try {
-      const pdfBuffer = await this.reportsService.generateWeeklyReport(weekNumber, year);
+      const buffer = await this.reportsService.generateWeeklyReport(weekNumber, year);
       
-      res.set({
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="rapport-semaine-${weekNumber}-${year}.pdf"`,
-        'Content-Length': pdfBuffer.length,
-      });
+      // Vérifier si c'est du PDF ou de l'HTML
+      const isPDF = buffer.length > 1000 && buffer[0] === 0x25 && buffer[1] === 0x50 && buffer[2] === 0x44 && buffer[3] === 0x46;
+      
+      if (isPDF) {
+        // PDF valide
+        res.set({
+          'Content-Type': 'application/pdf',
+          'Content-Disposition': `attachment; filename="rapport-semaine-${weekNumber}-${year}.pdf"`,
+          'Content-Length': buffer.length,
+        });
+      } else {
+        // HTML fallback
+        res.set({
+          'Content-Type': 'text/html; charset=utf-8',
+          'Content-Disposition': `attachment; filename="rapport-semaine-${weekNumber}-${year}.html"`,
+          'Content-Length': buffer.length,
+        });
+      }
 
-      res.end(pdfBuffer);
+      res.end(buffer);
     } catch (error) {
       res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
         message: 'Erreur lors de la génération du rapport',
@@ -39,11 +52,39 @@ export class ReportsController {
   @Get('current-week')
   @Roles(Role.ADMIN)
   async getCurrentWeekReport(@Res() res: Response) {
-    const now = new Date();
-    const weekNumber = this.getWeekNumber(now);
-    const year = now.getFullYear();
+    try {
+      const now = new Date();
+      const weekNumber = this.getWeekNumber(now);
+      const year = now.getFullYear();
 
-    return this.getWeeklyReport(weekNumber, year, res);
+      const buffer = await this.reportsService.generateWeeklyReport(weekNumber, year);
+      
+      // Vérifier si c'est du PDF ou de l'HTML
+      const isPDF = buffer.length > 1000 && buffer[0] === 0x25 && buffer[1] === 0x50 && buffer[2] === 0x44 && buffer[3] === 0x46;
+      
+      if (isPDF) {
+        // PDF valide
+        res.set({
+          'Content-Type': 'application/pdf',
+          'Content-Disposition': `attachment; filename="rapport-semaine-${weekNumber}-${year}.pdf"`,
+          'Content-Length': buffer.length,
+        });
+      } else {
+        // HTML fallback
+        res.set({
+          'Content-Type': 'text/html; charset=utf-8',
+          'Content-Disposition': `attachment; filename="rapport-semaine-${weekNumber}-${year}.html"`,
+          'Content-Length': buffer.length,
+        });
+      }
+
+      return res.end(buffer);
+    } catch (error) {
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        message: 'Erreur lors de la génération du rapport',
+        error: error.message,
+      });
+    }
   }
 
   private getWeekNumber(date: Date): number {

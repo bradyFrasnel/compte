@@ -1,5 +1,5 @@
 # 📋 MODIFICATIONS BACKEND - SHAREDVAULT
-## Date: 22 Mars 2026 (Correction erreur 500 PDF + Fallback HTML)
+## Date: 22 Mars 2026 (Correction erreur 500 PDF + Détection auto PDF/HTML)
 
 ---
 
@@ -714,12 +714,33 @@ try {
 }
 ```
 
-### 61. **Workflow complet**
+### 61. **Détection automatique PDF/HTML**
+- **Problème** : HTML retourné avec headers PDF → erreur ouverture
+- **Solution** : Détecter le type de contenu et adapter headers
+- **Détection PDF** : Vérifier magic bytes (0x25 0x50 0x44 0x46 = "%PDF")
+- **Code controller** :
+```typescript
+const buffer = await generateReport();
+const isPDF = buffer.length > 1000 && 
+  buffer[0] === 0x25 && buffer[1] === 0x50 && 
+  buffer[2] === 0x44 && buffer[3] === 0x46;
+
+if (isPDF) {
+  // Headers PDF
+  res.set({ 'Content-Type': 'application/pdf' });
+} else {
+  // Headers HTML
+  res.set({ 'Content-Type': 'text/html; charset=utf-8' });
+}
+```
+
+### 62. **Workflow complet**
 1. **Admin ajoute un membre** : POST /members/add
 2. **Membre fait un dépôt SEMAINE** : POST /transactions/deposit-with-category
 3. **Admin valide le dépôt** : PATCH /transactions/admin/validate/:id
 4. **Admin génère le rapport** : GET /reports/current-week
 5. **PDF téléchargé** : Format A4, design professionnel
+6. **Fallback HTML** : Si Puppeteer échoue, fichier .html téléchargé
 
 ---
 
