@@ -24,3 +24,7 @@ EXPOSE 5000
 
 # On lance l'application simplement (sans db push pour éviter timeout)
 CMD npx prisma migrate deploy && npm run start:prod
+
+# Liens vers les services Brevo
+ENV JWT_SECRET=cle-secret-pour-la-cours-des-compte-de-shabafai
+ENV BREVO_SMTP_USER=a46fb1001@smtp-brevo.com
